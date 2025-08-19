@@ -14,7 +14,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.eklinik.e_klinikappnew.navigation.RootNavGraph
-import com.eklinik.e_klinikappnew.navigation.SetupNavGraph
 import com.eklinik.e_klinikappnew.ui.theme.EKlinikAppNewTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -26,7 +25,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             EKlinikAppNewTheme {
                 val navController = rememberNavController()
-                SetupNavGraph(navController = navController)
+                RootNavGraph(navController = navController)
             }
         }
     }

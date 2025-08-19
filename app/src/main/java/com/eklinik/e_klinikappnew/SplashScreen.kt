@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.eklinik.e_klinikappnew.auth.AuthViewModel
 import com.eklinik.e_klinikappnew.data.OnBoardingDataStore
@@ -28,23 +29,25 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 
 @Composable
-fun SplashScreen(navController: NavController, authViewModel: AuthViewModel) {
-    val context = LocalContext.current
-    val dataStore = OnBoardingDataStore(context)
+fun SplashScreen(navController: NavController) {
+    val authViewModel: AuthViewModel = hiltViewModel()
+    val dataStore = OnBoardingDataStore(LocalContext.current)
     val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
 
     LaunchedEffect(key1 = true) {
         val isOnBoardingCompleted = dataStore.readOnboardingState().first()
 
-        delay(2500L)
+        delay(1500L) // Kısa bir bekleme
+
         val route = if (isLoggedIn) {
-            Screen.Home.route
+            Screen.Home.route // 1. Öncelik: Giriş yapmış mı? -> Home'a git.
         } else if (isOnBoardingCompleted) {
-            Screen.Auth.route
+            Screen.Auth.route // 2. Öncelik: Onboarding'i geçmiş mi? -> Auth'a git.
         } else {
-            Screen.Onboarding.route
+            Screen.Onboarding.route // 3. Öncelik: İlk kez mi açıyor? -> Onboarding'e git.
         }
 
+        // Karar verilen rotaya yönlendir ve Splash'i geri yığınından temizle
         navController.navigate(route) {
             popUpTo(Screen.Splash.route) { inclusive = true }
         }

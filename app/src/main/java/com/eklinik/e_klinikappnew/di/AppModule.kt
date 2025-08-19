@@ -19,19 +19,10 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
-
-    @Provides
-    @Singleton
-    fun provideSessionManager(@ApplicationContext context: Context): SessionManager {
-        return SessionManager(context)
-    }
-
     @Provides
     @Singleton
     fun provideOkHttpClient(sessionManager: SessionManager): OkHttpClient {
-        val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        }
+        val loggingInterceptor = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
         return OkHttpClient.Builder()
             .addInterceptor { chain ->
                 val token = runBlocking { sessionManager.readAuthToken().first() }
@@ -49,7 +40,7 @@ object AppModule {
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8080")
+            .baseUrl("http://10.0.2.2:8080") // EMULATOR İÇİN LOCALHOST
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

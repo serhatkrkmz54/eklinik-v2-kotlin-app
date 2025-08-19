@@ -1,9 +1,12 @@
 package com.eklinik.e_klinikappnew.auth
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.eklinik.e_klinikappnew.data.SessionManager
 import com.eklinik.e_klinikappnew.data.models.LoginRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -16,34 +19,35 @@ import javax.inject.Inject
 sealed interface LoginUiState {
     object Idle : LoginUiState
     object Loading : LoginUiState
+    data class Success(val message: String) : LoginUiState
     data class Error(val message: String) : LoginUiState
 }
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val repo: AuthRepository
-): ViewModel() {
+    private val repo: AuthRepository,
+    private val sessionManager: SessionManager, // Onboarding için de kullanacağız
+    @ApplicationContext private val context: Context
+) : ViewModel() {
+
     val isLoggedIn = repo.authToken
-        .map { token -> token != null }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = false
-        )
+        .map { it != null }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-    // Login ekranının anlık durumunu tutacak olan StateFlow
+    val onboardingCompleted = sessionManager.readOnboardingState()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true) // Başlangıçta tamamlanmış varsay, anlık kontrol edilecek
+
     private val _loginUiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
-    val loginUiState: StateFlow<LoginUiState> = _loginUiState.asStateFlow()
+    val loginUiState = _loginUiState.asStateFlow()
 
-    // Input alanlarının değerlerini ViewModel'de tutuyoruz
     private val _nationalId = MutableStateFlow("")
-    val nationalId: StateFlow<String> = _nationalId.asStateFlow()
+    val nationalId = _nationalId.asStateFlow()
 
     private val _password = MutableStateFlow("")
-    val password: StateFlow<String> = _password.asStateFlow()
+    val password = _password.asStateFlow()
 
     fun onNationalIdChanged(value: String) {
-        if (value.all { char -> char.isDigit() } && value.length <= 11) {
+        if (value.all { it.isDigit() } && value.length <= 11) {
             _nationalId.value = value
         }
     }
@@ -55,25 +59,29 @@ class AuthViewModel @Inject constructor(
     fun login() {
         viewModelScope.launch {
             _loginUiState.value = LoginUiState.Loading
-
-            val loginRequest = LoginRequest(
-                nationalId = _nationalId.value,
-                password = _password.value
-            )
-
-            val result = repo.login(loginRequest)
-
-            when(result) {
+            val result = repo.login(LoginRequest(nationalId = _nationalId.value, password = _password.value))
+            when (result) {
                 is AuthResult.Success -> {
-                    _loginUiState.value = LoginUiState.Idle
+                    _loginUiState.value = LoginUiState.Success("Giriş başarılı!")
                 }
-                is AuthResult.Error -> {
-                    _loginUiState.value = LoginUiState.Error(result.message)
-                }
+                is AuthResult.Error -> _loginUiState.value = LoginUiState.Error(result.message)
             }
         }
     }
-    fun consumeError() {
+
+    fun logout() {
+        viewModelScope.launch {
+            repo.logout()
+        }
+    }
+
+    fun consumeState() {
         _loginUiState.value = LoginUiState.Idle
+    }
+
+    fun completeOnboarding() {
+        viewModelScope.launch {
+            sessionManager.saveOnboardingState(true)
+        }
     }
 }

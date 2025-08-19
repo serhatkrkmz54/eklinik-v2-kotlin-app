@@ -7,12 +7,16 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+import javax.inject.Singleton
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "session_prefs")
 
-class SessionManager(context: Context) {
+@Singleton
+class SessionManager @Inject constructor(@ApplicationContext context: Context) {
 
     private val dataStore = context.dataStore
 
@@ -21,35 +25,19 @@ class SessionManager(context: Context) {
         val ONBOARDING_COMPLETED_KEY = booleanPreferencesKey("onboarding_completed")
     }
 
-    // --- Token Functions ---
     suspend fun saveAuthToken(token: String) {
-        dataStore.edit { preferences ->
-            preferences[AUTH_TOKEN_KEY] = token
-        }
+        dataStore.edit { it[AUTH_TOKEN_KEY] = token }
     }
 
-    fun readAuthToken(): Flow<String?> {
-        return dataStore.data.map { preferences ->
-            preferences[AUTH_TOKEN_KEY]
-        }
-    }
+    fun readAuthToken(): Flow<String?> = dataStore.data.map { it[AUTH_TOKEN_KEY] }
 
     suspend fun clearAuthToken() {
-        dataStore.edit { preferences ->
-            preferences.remove(AUTH_TOKEN_KEY)
-        }
+        dataStore.edit { it.remove(AUTH_TOKEN_KEY) }
     }
 
-    // --- Onboarding Functions ---
     suspend fun saveOnboardingState(isCompleted: Boolean) {
-        dataStore.edit { preferences ->
-            preferences[ONBOARDING_COMPLETED_KEY] = isCompleted
-        }
+        dataStore.edit { it[ONBOARDING_COMPLETED_KEY] = isCompleted }
     }
 
-    fun readOnboardingState(): Flow<Boolean> {
-        return dataStore.data.map { preferences ->
-            preferences[ONBOARDING_COMPLETED_KEY] ?: false
-        }
-    }
+    fun readOnboardingState(): Flow<Boolean> = dataStore.data.map { it[ONBOARDING_COMPLETED_KEY] ?: false }
 }

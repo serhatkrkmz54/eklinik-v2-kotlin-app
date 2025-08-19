@@ -10,15 +10,16 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import com.eklinik.e_klinikappnew.main.DashboardScreen
 
 fun NavGraphBuilder.homeNavGraph(navController: NavHostController) {
     navigation(
-        startDestination = Screen.Dashboard.route, // Başlangıç ekranı Dashboard
+        startDestination = Screen.Dashboard.route,
         route = Screen.Home.route
     ) {
-        // Home (giriş yapılmış) dünyasında sadece tek bir ekran var: Dashboard.
         composable(Screen.Dashboard.route) {
-            PlaceholderScreen(screenName = "Dashboard")
+            // DEĞİŞİKLİK: DashboardScreen'e navController'ı iletiyoruz.
+            DashboardScreen(navController = navController)
         }
     }
 }

@@ -7,4 +7,15 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    
+    <!-- Custom Toast Colors -->
+    <color name="success_green">#FF4CAF50</color>
+    <color name="success_green_dark">#FF388E3C</color>
+    <color name="error_red">#FFF44336</color>
+    <color name="error_red_dark">#FFD32F2F</color>
+    
+    <!-- Popup Colors -->
+    <color name="primary_teal">#FF26A69A</color>
+    <color name="gray_text">#FF757575</color>
+    <color name="light_gray">#FFE0E0E0</color>
 </resources>
