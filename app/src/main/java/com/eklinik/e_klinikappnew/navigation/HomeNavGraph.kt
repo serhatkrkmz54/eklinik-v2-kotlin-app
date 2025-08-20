@@ -10,7 +10,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
-import com.eklinik.e_klinikappnew.main.DashboardScreen
+import com.eklinik.e_klinikappnew.main.MainScreen
 
 fun NavGraphBuilder.homeNavGraph(navController: NavHostController) {
     navigation(
@@ -18,8 +18,8 @@ fun NavGraphBuilder.homeNavGraph(navController: NavHostController) {
         route = Screen.Home.route
     ) {
         composable(Screen.Dashboard.route) {
-            // DEĞİŞİKLİK: DashboardScreen'e navController'ı iletiyoruz.
-            DashboardScreen(navController = navController)
+            // MainScreen bottom navigation ile birlikte tüm ana ekranları yönetir
+            MainScreen()
         }
     }
 }

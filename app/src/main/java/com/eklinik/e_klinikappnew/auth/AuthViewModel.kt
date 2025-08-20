@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.eklinik.e_klinikappnew.data.SessionManager
 import com.eklinik.e_klinikappnew.data.models.LoginRequest
+import com.eklinik.e_klinikappnew.data.models.RegisterRequest
+import com.eklinik.e_klinikappnew.data.models.RegisterPatientCombinatedRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +23,13 @@ sealed interface LoginUiState {
     object Loading : LoginUiState
     data class Success(val message: String) : LoginUiState
     data class Error(val message: String) : LoginUiState
+}
+
+sealed interface RegisterUiState {
+    object Idle : RegisterUiState
+    object Loading : RegisterUiState
+    data class Success(val message: String) : RegisterUiState
+    data class Error(val message: String) : RegisterUiState
 }
 
 @HiltViewModel
@@ -45,6 +54,31 @@ class AuthViewModel @Inject constructor(
 
     private val _password = MutableStateFlow("")
     val password = _password.asStateFlow()
+
+    // Register form fields
+    private val _registerUiState = MutableStateFlow<RegisterUiState>(RegisterUiState.Idle)
+    val registerUiState = _registerUiState.asStateFlow()
+
+    private val _registerNationalId = MutableStateFlow("")
+    val registerNationalId = _registerNationalId.asStateFlow()
+
+    private val _firstName = MutableStateFlow("")
+    val firstName = _firstName.asStateFlow()
+
+    private val _lastName = MutableStateFlow("")
+    val lastName = _lastName.asStateFlow()
+
+    private val _registerPassword = MutableStateFlow("")
+    val registerPassword = _registerPassword.asStateFlow()
+
+    private val _email = MutableStateFlow("")
+    val email = _email.asStateFlow()
+
+    private val _phoneNumber = MutableStateFlow("")
+    val phoneNumber = _phoneNumber.asStateFlow()
+
+    private val _termsAccepted = MutableStateFlow(false)
+    val termsAccepted = _termsAccepted.asStateFlow()
 
     fun onNationalIdChanged(value: String) {
         if (value.all { it.isDigit() } && value.length <= 11) {
@@ -83,5 +117,73 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             sessionManager.saveOnboardingState(true)
         }
+    }
+
+    // Register form handlers
+    fun onRegisterNationalIdChanged(value: String) {
+        if (value.all { it.isDigit() } && value.length <= 11) {
+            _registerNationalId.value = value
+        }
+    }
+
+    fun onFirstNameChanged(value: String) {
+        _firstName.value = value
+    }
+
+    fun onLastNameChanged(value: String) {
+        _lastName.value = value
+    }
+
+    fun onRegisterPasswordChanged(value: String) {
+        _registerPassword.value = value
+    }
+
+    fun onEmailChanged(value: String) {
+        _email.value = value
+    }
+
+    fun onPhoneNumberChanged(value: String) {
+        if (value.startsWith("+90") && value.length <= 13) {
+            _phoneNumber.value = value
+        } else if (!value.startsWith("+90") && value.isEmpty()) {
+            _phoneNumber.value = "+90"
+        }
+    }
+
+    fun onTermsAcceptedChanged(accepted: Boolean) {
+        _termsAccepted.value = accepted
+    }
+
+    fun register() {
+        viewModelScope.launch {
+            _registerUiState.value = RegisterUiState.Loading
+            
+            val registerRequest = RegisterRequest(
+                nationalId = _registerNationalId.value,
+                firstName = _firstName.value,
+                lastName = _lastName.value,
+                password = _registerPassword.value,
+                email = _email.value,
+                phoneNumber = _phoneNumber.value
+            )
+            
+            val registerPatientRequest = RegisterPatientCombinatedRequest(
+                userRequest = registerRequest,
+                profileRequest = null // Backend will create patient profile automatically
+            )
+            
+            when (val result = repo.register(registerPatientRequest)) {
+                is AuthResult.Success -> {
+                    _registerUiState.value = RegisterUiState.Success("Kayıt başarılı! Hoş geldiniz.")
+                }
+                is AuthResult.Error -> {
+                    _registerUiState.value = RegisterUiState.Error(result.message)
+                }
+            }
+        }
+    }
+
+    fun consumeRegisterState() {
+        _registerUiState.value = RegisterUiState.Idle
     }
 }

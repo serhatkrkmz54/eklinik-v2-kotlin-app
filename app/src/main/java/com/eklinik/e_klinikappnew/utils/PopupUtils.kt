@@ -119,5 +119,45 @@ object PopupUtils {
             }
         }, 2000)
     }
+    
+    fun showErrorPopup(
+        context: Context,
+        title: String,
+        message: String,
+        buttonText: String = "Tamam",
+        onButtonClick: (() -> Unit)? = null
+    ) {
+        val activity = getActivity(context)
+        if (activity == null || activity.isFinishing || activity.isDestroyed) {
+            return
+        }
+
+        val inflater = LayoutInflater.from(activity)
+        val dialogView = inflater.inflate(R.layout.popup_error, null)
+
+        val titleView = dialogView.findViewById<TextView>(R.id.popup_title)
+        val messageView = dialogView.findViewById<TextView>(R.id.popup_message)
+        val buttonView = dialogView.findViewById<Button>(R.id.popup_button)
+        val iconView = dialogView.findViewById<ImageView>(R.id.popup_icon)
+
+        titleView.text = title
+        messageView.text = message
+        buttonView.text = buttonText
+        iconView.setImageResource(R.drawable.ic_error_circle)
+
+        val alertDialog = AlertDialog.Builder(activity)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+        
+        alertDialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        buttonView.setOnClickListener {
+            onButtonClick?.invoke()
+            alertDialog.dismiss()
+        }
+
+        alertDialog.show()
+    }
 
 }

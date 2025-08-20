@@ -5,6 +5,7 @@ import android.util.Base64
 import com.eklinik.e_klinikappnew.data.SessionManager
 import com.eklinik.e_klinikappnew.data.models.ErrorResponse
 import com.eklinik.e_klinikappnew.data.models.LoginRequest
+import com.eklinik.e_klinikappnew.data.models.RegisterPatientCombinatedRequest
 import com.eklinik.e_klinikappnew.network.ApiService
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.Flow
@@ -36,6 +37,33 @@ class AuthRepository @Inject constructor(
                     AuthResult.Success
                 } else {
                     AuthResult.Error("Bu uygulamaya giriş yetkiniz bulunmamaktadır.")
+                }
+            } else {
+                val errorJsonString = response.errorBody()?.string()
+                val errorMessage = errorJsonString?.let {
+                    Gson().fromJson(it, ErrorResponse::class.java).message
+                } ?: "Bilinmeyen bir hata oluştu."
+                AuthResult.Error(errorMessage)
+            }
+        } catch (e: Exception) {
+            AuthResult.Error("İnternet bağlantınızı kontrol edin veya sunucu yanıt vermiyor.")
+        }
+    }
+
+    suspend fun register(registerRequest: RegisterPatientCombinatedRequest): AuthResult {
+        return try {
+            val response = apiService.register(registerRequest)
+            if (response.isSuccessful) {
+                val loginResponse = response.body()!!
+                val token = loginResponse.accessToken
+                val decodedRole = decodeJwtAndGetRole(token)
+
+                // Sadece hasta rolüne izin ver
+                if (decodedRole == "ROLE_PATIENT") {
+                    sessionManager.saveAuthToken(token)
+                    AuthResult.Success
+                } else {
+                    AuthResult.Error("Bu uygulamaya kayıt yetkiniz bulunmamaktadır.")
                 }
             } else {
                 val errorJsonString = response.errorBody()?.string()

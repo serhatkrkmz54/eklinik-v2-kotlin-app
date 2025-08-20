@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import com.eklinik.e_klinikappnew.auth.LoginScreen
 import com.eklinik.e_klinikappnew.auth.RegisterScreen
+import com.eklinik.e_klinikappnew.auth.TermsOfServiceScreen
 import com.eklinik.e_klinikappnew.auth.WelcomeScreen
 
 fun NavGraphBuilder.authNavGraph(navController: NavHostController) {
@@ -21,6 +22,9 @@ fun NavGraphBuilder.authNavGraph(navController: NavHostController) {
         }
         composable(Screen.Register.route) {
             RegisterScreen(navController = navController)
+        }
+        composable(Screen.TermsOfService.route) {
+            TermsOfServiceScreen(navController = navController)
         }
     }
 }
